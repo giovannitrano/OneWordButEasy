@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USA OneWord but easy</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        table { width: 80%; margin: 20px auto; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 10px; text-align: center; }
+        img { max-width: 150px; }
+        textarea { width: 800px; height: 200px; }
+    </style>
+</head>
+<body>
+    <h1>USA OneWord but easy</h1>
+    <textarea id="trademarkNumbers" placeholder="Enter the OneWord text or load it using the Choose File button"></textarea><br>
+    
+    <!-- Browse Button to Upload .dat File -->
+    <input type="file" id="fileInput" accept=".dat" onchange="loadFile()"><br><br>
+
+    <button onclick="loadTrademarks()">Load</button>
+    
+    <table id="results">
+        <tr>
+            <th>#</th>
+            <th>Application Number</th>
+            <th>Trademark Name</th>
+            <th>Logo</th>
+        </tr>
+    </table>
+
+    <script>
+        // Load contents of the file into the textarea
+        function loadFile() {
+            const fileInput = document.getElementById("fileInput");
+            const file = fileInput.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    document.getElementById("trademarkNumbers").value = content;
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function loadTrademarks() {
+            const input = document.getElementById("trademarkNumbers").value;
+            const lines = input.split("\n").map(line => line.trim()).filter(line => line);
+
+            const table = document.getElementById("results");
+            table.innerHTML = "<tr><th>#</th><th>Application Number</th><th>Trademark Name</th><th>Logo</th></tr>"; // Clear previous results and add new header
+
+            lines.forEach((line, index) => {
+                const appNoMatch = line.match(/App_no\s*:\s*(\d+)/);
+                const trmNamMatch = line.match(/Trm_nam\s*:\s*([A-Za-z0-9\s]+)/);
+
+                if (appNoMatch && trmNamMatch) {
+                    const appNo = appNoMatch[1];
+                    const trmName = trmNamMatch[1];
+                    const imageUrl = `https://tmcms-docs.uspto.gov/cases/${appNo}/mark/large.png`;
+                    const redirectUrl = `https://tsdr.uspto.gov/#caseNumber=${appNo}&caseSearchType=US_APPLICATION&caseType=DEFAULT&searchType=statusSearch`;
+
+                    const row = document.createElement("tr");
+
+                    // Add serial number starting from 1
+                    row.innerHTML = `
+                        <td>${index + 1}</td> <!-- Serial number starts from 1 -->
+                        <td><a href="${redirectUrl}" target="_blank">${appNo}</a></td>
+                        <td>${trmName}</td>
+                        <td><img src="${imageUrl}" onerror="this.onerror=null; this.src='https://via.placeholder.com/150?text=Not+Found';"></td>
+                    `;
+
+                    table.appendChild(row);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
