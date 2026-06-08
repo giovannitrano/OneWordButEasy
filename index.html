@@ -3,80 +3,493 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USA OneWord but easy</title>
+    <title>USA OneWord — Easy View</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        table { width: 80%; margin: 20px auto; border-collapse: collapse; }
-        th, td { border: 1px solid black; padding: 10px; text-align: center; }
-        img { max-width: 150px; }
-        textarea { width: 800px; height: 200px; }
+        :root {
+            --bg: #f4f3ef;
+            --surface: #ffffff;
+            --border: #d6d3ca;
+            --text: #1a1a18;
+            --muted: #7a7870;
+            --accent: #1a56db;
+            --accent-light: #dbeafe;
+            --done: #e5e5e5;
+            --done-text: #999;
+            --header-bg: #1a1a18;
+            --header-text: #f4f3ef;
+            --row-hover: #f9f8f5;
+            --green: #166534;
+            --green-bg: #dcfce7;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--header-bg);
+            color: var(--header-text);
+            padding: 24px 40px;
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+        }
+
+        header h1 {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        header span {
+            font-size: 0.8rem;
+            color: #888;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .controls {
+            max-width: 1100px;
+            margin: 32px auto 0;
+            padding: 0 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 160px;
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            padding: 12px 14px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.78rem;
+            background: var(--surface);
+            color: var(--text);
+            resize: vertical;
+            transition: border-color 0.15s;
+            line-height: 1.5;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-load {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 9px 22px;
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+        }
+
+        .btn-load:hover { background: #1648c0; }
+        .btn-load:active { transform: scale(0.97); }
+
+        .file-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 5px;
+            font-size: 0.85rem;
+            color: var(--muted);
+            cursor: pointer;
+            background: var(--surface);
+            transition: border-color 0.15s, color 0.15s;
+        }
+
+        .file-label:hover { border-color: var(--accent); color: var(--accent); }
+        .file-label input { display: none; }
+
+        .legend {
+            margin-left: auto;
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        .legend span { display: flex; align-items: center; gap: 5px; }
+        .legend .dot {
+            width: 9px; height: 9px; border-radius: 50%;
+            display: inline-block;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--green-bg);
+            color: var(--green);
+            border: 1px solid #86efac;
+            padding: 9px 20px;
+            border-radius: 30px;
+            font-size: 0.83rem;
+            font-weight: 500;
+            font-family: 'IBM Plex Mono', monospace;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            pointer-events: none;
+            z-index: 9999;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .table-wrap {
+            max-width: 1100px;
+            margin: 24px auto 60px;
+            padding: 0 24px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+        }
+
+        thead tr {
+            background: var(--header-bg);
+            color: var(--header-text);
+        }
+
+        thead th {
+            padding: 12px 14px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            text-align: center;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover:not(.done):not(.active) { background: var(--row-hover); }
+
+        tbody tr.active {
+            background: var(--accent-light);
+        }
+
+        tbody tr.done {
+            background: var(--done);
+        }
+
+        tbody tr.done td {
+            color: var(--done-text);
+        }
+
+        td {
+            padding: 10px 14px;
+            text-align: center;
+            font-size: 0.88rem;
+            vertical-align: middle;
+        }
+
+        .col-num {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--muted);
+            cursor: pointer;
+            font-weight: 600;
+            transition: color 0.15s;
+            user-select: none;
+        }
+
+        .col-num:hover { color: var(--accent); text-decoration: underline; }
+
+        .col-appno {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--accent);
+            cursor: pointer;
+            user-select: none;
+            transition: opacity 0.15s;
+        }
+
+        .col-appno:hover { text-decoration: underline; opacity: 0.8; }
+
+        .col-name {
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            user-select: none;
+        }
+
+        .col-name:hover { text-decoration: underline; }
+
+        .col-logo img {
+            max-width: 120px;
+            max-height: 70px;
+            object-fit: contain;
+            cursor: zoom-in;
+            border-radius: 3px;
+            transition: opacity 0.15s, transform 0.15s;
+        }
+
+        .col-logo img:hover { opacity: 0.8; transform: scale(1.05); }
+
+        .empty-state {
+            padding: 48px;
+            color: var(--muted);
+            font-size: 0.88rem;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        /* Lightbox */
+        #lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+        }
+
+        #lightbox.open {
+            display: flex;
+        }
+
+        #lightbox img {
+            max-width: 95vw;
+            max-height: 95vh;
+            object-fit: contain;
+            border-radius: 4px;
+            box-shadow: 0 8px 48px rgba(0,0,0,0.6);
+            cursor: default;
+        }
+
+        #lightbox-close {
+            position: absolute;
+            top: 18px;
+            right: 24px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            line-height: 1;
+            opacity: 0.7;
+            transition: opacity 0.15s;
+            user-select: none;
+        }
+
+        #lightbox-close:hover { opacity: 1; }
     </style>
 </head>
 <body>
-    <h1>USA OneWord but easy</h1>
-    <textarea id="trademarkNumbers" placeholder="Enter the OneWord text or load it using the Choose File button"></textarea><br>
-    
-    <!-- Browse Button to Upload .dat File -->
-    <input type="file" id="fileInput" accept=".dat" onchange="loadFile()"><br><br>
 
-    <button onclick="loadTrademarks()">Load</button>
-    
+<header>
+    <h1>USA OneWord</h1>
+    <span>// Prep Tool</span>
+</header>
+
+<div class="controls">
+    <textarea id="trademarkNumbers" placeholder="Paste OneWord data here, or use the file picker below…"></textarea>
+    <div class="actions">
+        <button class="btn-load" onclick="loadTrademarks()">▶ Load</button>
+        <label class="file-label">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Choose .dat file
+            <input type="file" accept=".dat" onchange="loadFile(this)">
+        </label>
+        <div class="legend">
+            <span><span class="dot" style="background:var(--accent)"></span> App # or Name → copy &amp; mark done</span>
+            <span><span class="dot" style="background:#a855f7"></span> Logo → view full image</span>
+            <span><span class="dot" style="background:#f59e0b"></span> # → open USPTO</span>
+        </div>
+    </div>
+</div>
+
+<div class="table-wrap">
     <table id="results">
-        <tr>
-            <th>#</th>
-            <th>Application Number</th>
-            <th>Trademark Name</th>
-            <th>Logo</th>
-        </tr>
+        <thead>
+            <tr>
+                <th style="width:50px">#</th>
+                <th style="width:150px">App Number</th>
+                <th>Trademark Name</th>
+                <th style="width:180px">Logo</th>
+            </tr>
+        </thead>
+        <tbody id="resultsBody">
+            <tr><td colspan="4" class="empty-state">No data loaded yet.</td></tr>
+        </tbody>
     </table>
+</div>
 
-    <script>
-        // Load contents of the file into the textarea
-        function loadFile() {
-            const fileInput = document.getElementById("fileInput");
-            const file = fileInput.files[0];
-            
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const content = e.target.result;
-                    document.getElementById("trademarkNumbers").value = content;
-                };
-                reader.readAsText(file);
-            }
+<!-- Lightbox -->
+<div id="lightbox">
+    <span id="lightbox-close" title="Close">&#x2715;</span>
+    <img id="lightbox-img" src="" alt="Trademark logo">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    // Lightbox
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+
+    document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+    function openLightbox(url) {
+        lightboxImg.src = url;
+        lightbox.classList.add('open');
+    }
+
+    function closeLightbox() {
+        lightbox.classList.remove('open');
+        lightboxImg.src = '';
+    }
+
+    function loadFile(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById("trademarkNumbers").value = e.target.result;
+        };
+        reader.readAsText(file);
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(t._timer);
+        t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    function copyToClipboard(text) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+        } else {
+            fallbackCopy(text);
         }
+    }
 
-        function loadTrademarks() {
-            const input = document.getElementById("trademarkNumbers").value;
-            const lines = input.split("\n").map(line => line.trim()).filter(line => line);
+    function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+    }
 
-            const table = document.getElementById("results");
-            table.innerHTML = "<tr><th>#</th><th>Application Number</th><th>Trademark Name</th><th>Logo</th></tr>"; // Clear previous results and add new header
+    function markDone(row, appNo) {
+        copyToClipboard(appNo);
+        const isNowDone = !row.classList.contains('done');
+        row.classList.remove('active');
+        row.classList.toggle('done');
+        if (isNowDone) {
+            showToast(`Copied ${appNo} — marked done`);
+        } else {
+            showToast(`${appNo} — unmarked`);
+        }
+    }
 
-            lines.forEach((line, index) => {
-                const appNoMatch = line.match(/App_no\s*:\s*(\d+)/);
-                const trmNamMatch = line.match(/Trm_nam\s*:\s*([A-Za-z0-9\s]+)/);
+    function loadTrademarks() {
+        const input = document.getElementById("trademarkNumbers").value;
+        const lines = input.split("\n").map(l => l.trim()).filter(l => l);
+        const tbody = document.getElementById("resultsBody");
+        tbody.innerHTML = '';
 
-                if (appNoMatch && trmNamMatch) {
-                    const appNo = appNoMatch[1];
-                    const trmName = trmNamMatch[1];
-                    const imageUrl = `https://tmcms-docs.uspto.gov/cases/${appNo}/mark/large.png`;
-                    const redirectUrl = `https://tsdr.uspto.gov/#caseNumber=${appNo}&caseSearchType=US_APPLICATION&caseType=DEFAULT&searchType=statusSearch`;
+        let count = 0;
 
-                    const row = document.createElement("tr");
+        lines.forEach((line) => {
+            const appNoMatch = line.match(/App_no\s*:\s*(\d+)/);
+            const trmNamMatch = line.match(/Trm_nam\s*:\s*([A-Za-z0-9\s&'-]+)/);
 
-                    // Add serial number starting from 1
-                    row.innerHTML = `
-                        <td>${index + 1}</td> <!-- Serial number starts from 1 -->
-                        <td><a href="${redirectUrl}" target="_blank">${appNo}</a></td>
-                        <td>${trmName}</td>
-                        <td><img src="${imageUrl}" onerror="this.onerror=null; this.src='https://via.placeholder.com/150?text=Not+Found';"></td>
-                    `;
+            if (!appNoMatch || !trmNamMatch) return;
 
-                    table.appendChild(row);
-                }
+            count++;
+            const appNo = appNoMatch[1].trim();
+            const trmName = trmNamMatch[1].trim();
+            const imageUrl = `https://tmcms-docs.uspto.gov/cases/${appNo}/mark/large.png`;
+            const usptoUrl = `https://tsdr.uspto.gov/#caseNumber=${appNo}&caseSearchType=US_APPLICATION&caseType=DEFAULT&searchType=statusSearch`;
+            const rowNum = count;
+
+            const row = document.createElement("tr");
+            row.dataset.appno = appNo;
+
+            row.innerHTML = `
+                <td class="col-num" title="Open on USPTO.gov">${rowNum}</td>
+                <td class="col-appno" title="Copy &amp; mark done">${appNo}</td>
+                <td class="col-name" title="Copy &amp; mark done">${trmName}</td>
+                <td class="col-logo"><img src="${imageUrl}" alt="${trmName} logo" title="View full image" onerror="this.onerror=null;this.style.display='none';this.parentElement.innerHTML='<span style=\'color:var(--muted);font-size:0.75rem;font-family:IBM Plex Mono,monospace\'>no image</span>'"></td>
+            `;
+
+            // # → open USPTO
+            row.querySelector('.col-num').addEventListener('click', () => {
+                window.open(usptoUrl, '_blank');
             });
+
+            // App No → copy + toggle done (blue highlight)
+            row.querySelector('.col-appno').addEventListener('click', () => {
+                markDone(row, appNo);
+            });
+
+            // Trademark Name → copy + toggle done (same behaviour)
+            row.querySelector('.col-name').addEventListener('click', () => {
+                markDone(row, appNo);
+            });
+
+            // Logo → open inline lightbox at full resolution
+            const img = row.querySelector('img');
+            if (img) {
+                img.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openLightbox(imageUrl);
+                });
+            }
+
+            tbody.appendChild(row);
+        });
+
+        if (count === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No valid records found. Check the data format.</td></tr>';
         }
-    </script>
+    }
+</script>
 </body>
 </html>
